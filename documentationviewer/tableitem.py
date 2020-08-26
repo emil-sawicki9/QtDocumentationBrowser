@@ -2,7 +2,7 @@
 
 class TableItem:
     name = ""
-    link = ""
+    url = ""
     description = ""
 
     def __init__(self):

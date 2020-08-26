@@ -18,7 +18,7 @@ qt_classes_dictionary = parser.parse_qt_classes(response_qt_classes.text)
 qml_types_dictionary = parser.parse_qml_types(response_qml_types.text)
 
 window.model.populate_model(qt_classes_dictionary, QT_BASE_URL, "Qt class")
-window.model.populate_model(qml_types_dictionary, QT_BASE_URL, "QML type")
+# window.model.populate_model(qml_types_dictionary, QT_BASE_URL, "QML type")
 
 window.show()
 

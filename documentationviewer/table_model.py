@@ -5,15 +5,19 @@ import warnings
 
 
 class TableModel(QAbstractItemModel):
+    # Roles
+    NameRole = Qt.UserRole + 1
+    DescriptionRole = Qt.UserRole + 2
+    column_list = [NameRole, DescriptionRole]
+    # Data
     data_list = []
+    # Private
     _column_name = 0
     _column_type = 1
     _header_data = ["Name", "Type"]
 
     def __init__(self, parent=None):
         super(TableModel, self).__init__(parent)
-        # self.setHeaderData(0, Qt.Horizontal, "Name", Qt.DisplayRole)
-        # self.setHeaderData(1, Qt.Horizontal, "Type")
 
     def rowCount(self, parent = QModelIndex()):
         return len(self.data_list)
@@ -21,7 +25,7 @@ class TableModel(QAbstractItemModel):
     def columnCount(self, parent):
         return 2
 
-    def index(self, row, column, parent):
+    def index(self, row, column, parent = QModelIndex()):
         return self.createIndex(row, column, parent)
 
     def parent(self, child):
@@ -34,20 +38,22 @@ class TableModel(QAbstractItemModel):
             return QVariant()
 
     def data(self, index, role):
-        if not index.isValid() or index.row() >= len(self.data_list) or role != Qt.DisplayRole:
+        if role == Qt.DisplayRole:
+            role = self.column_list[index.column()]
+        if not self._is_valid_index(index) or role <= Qt.UserRole:
             return QVariant()
 
         item = self.data_list[index.row()]
-        if index.column() == self._column_name:
+        if role == self.NameRole:
             return item.name
-        elif index.column() == self._column_type:
+        elif role == self.DescriptionRole:
             return item.description
         return QVariant()
 
-    def append_item(self, name, link, item_type):
+    def append_item(self, name, url, item_type):
         item = TableItem()
         item.name = name
-        item.link = link
+        item.url = url
         item.description = item_type
         # Check if item already exists
         for d in self.data_list:
@@ -61,5 +67,15 @@ class TableModel(QAbstractItemModel):
 
     def populate_model(self, data, base_url, item_type):
         for qt_class in data:
-            link = data[qt_class]
-            self.append_item(qt_class, base_url + link, item_type)
+            url = data[qt_class]
+            self.append_item(qt_class, base_url + url, item_type)
+
+    def _is_valid_index(self, index):
+        return index.isValid() and index.row() < len(self.data_list)
+
+    def get_url(self, index):
+        if not self._is_valid_index(index):
+            return ""
+
+        item = self.data_list[index.row()]
+        return item.url
