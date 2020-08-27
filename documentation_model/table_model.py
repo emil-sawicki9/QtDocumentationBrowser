@@ -1,6 +1,7 @@
-from PyQt5.QtCore import QModelIndex, QAbstractItemModel, QVariant, Qt
+from PyQt5 import QtCore
+from PyQt5.QtCore import QModelIndex, QAbstractItemModel, QVariant, Qt, QByteArray
 
-from .tableitem import TableItem
+from documentation_model.tableitem import TableItem
 import warnings
 
 
@@ -8,13 +9,13 @@ class TableModel(QAbstractItemModel):
     # Roles
     NameRole = Qt.UserRole + 1
     DescriptionRole = Qt.UserRole + 2
+    UrlRole = Qt.UserRole + 3
     column_list = [NameRole, DescriptionRole]
     # Data
     data_list = []
     # Private
     _column_name = 0
     _column_type = 1
-    _header_data = ["Name", "Type"]
 
     def __init__(self, parent=None):
         super(TableModel, self).__init__(parent)
@@ -31,11 +32,12 @@ class TableModel(QAbstractItemModel):
     def parent(self, child):
         return QModelIndex()
 
-    def headerData(self, section, orientation, role):
-        if role == Qt.DisplayRole and orientation == Qt.Horizontal:
-            return self._header_data[section]
-        else:
-            return QVariant()
+    def roleNames(self):
+        return {
+            self.NameRole: b'name',
+            self.DescriptionRole: b'description',
+            self.UrlRole: b'url'
+        }
 
     def data(self, index, role):
         if role == Qt.DisplayRole:
@@ -48,6 +50,8 @@ class TableModel(QAbstractItemModel):
             return item.name
         elif role == self.DescriptionRole:
             return item.description
+        elif role == self.UrlRole:
+            return item.url
         return QVariant()
 
     def append_item(self, name, url, item_type):
@@ -72,10 +76,3 @@ class TableModel(QAbstractItemModel):
 
     def _is_valid_index(self, index):
         return index.isValid() and index.row() < len(self.data_list)
-
-    def get_url(self, index):
-        if not self._is_valid_index(index):
-            return ""
-
-        item = self.data_list[index.row()]
-        return item.url

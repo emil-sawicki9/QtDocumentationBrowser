@@ -9,4 +9,4 @@ class TableItem:
         pass
 
     def __eq__(self, other):
-        return self.name == other.name and self.link == other.link and self.description == other.description
+        return self.name == other.name and self.url == other.url and self.description == other.description

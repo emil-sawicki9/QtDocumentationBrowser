@@ -2,7 +2,7 @@ from html.parser import HTMLParser
 from abc import ABC
 
 
-class QtTypesListParser(HTMLParser, ABC):
+class QtHtmlParser(HTMLParser, ABC):
     parsing_qt_classes = False
     parsing_qml_types = False
     found_dd = False
