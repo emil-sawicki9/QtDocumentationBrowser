@@ -1,7 +1,7 @@
 import time
 
 from PyQt5 import QtCore
-from PyQt5.QtCore import QModelIndex, QAbstractItemModel, QVariant, Qt, QByteArray
+from PyQt5.QtCore import QModelIndex, QAbstractItemModel, QVariant, Qt, QByteArray, QSettings
 
 from documentation_model.table_item import TableItem
 import warnings
@@ -19,6 +19,9 @@ class DocumentationModel(QAbstractItemModel):
     # Data
     column_list = [NameRole, DescriptionRole]
     data_list = []
+
+    # Private
+    _settings = QSettings("LidoSoft", "QtDocumentationViewer")
 
     def __init__(self, parent=None):
         super(DocumentationModel, self).__init__(parent)
@@ -59,7 +62,7 @@ class DocumentationModel(QAbstractItemModel):
         elif role == self.LastUsedRole:
             return item.last_used
         elif role == self.IsPinnedRole:
-            return item.pinned_index > 0
+            return item.pinned_index >= 0
         elif role == self.PinnedIndexRole:
             return item.pinned_index
         elif role == self.UseCountRole:
@@ -76,7 +79,9 @@ class DocumentationModel(QAbstractItemModel):
         if pin:
             item.pinned_index = self._find_last_pinned_index() + 1
         else:
-            item.pinned_index = 0
+            item.pinned_index = -1
+
+        self._update_pinned_list()
 
         index = found_item['index']
         model_index = self.createIndex(index, 0)
@@ -96,11 +101,12 @@ class DocumentationModel(QAbstractItemModel):
         model_index = self.createIndex(index, 0)
         self.dataChanged.emit(model_index, model_index, [self.LastUsedRole, self.UseCountRole])
 
-    def append_item(self, name, url, item_type):
+    def append_item(self, name, url, item_type, pinned_index):
         item = TableItem()
         item.name = name
         item.url = url
         item.description = item_type
+        item.pinned_index = pinned_index
         # Check if item already exists
         for d in self.data_list:
             if d == item:
@@ -112,9 +118,25 @@ class DocumentationModel(QAbstractItemModel):
         self.endInsertRows()
 
     def populate_model(self, data, base_url, item_type):
+        pinned_list = self._settings.value("pinned_url", [], str)
         for qt_class in data:
-            url = data[qt_class]
-            self.append_item(qt_class, base_url + url, item_type)
+            url = base_url + data[qt_class]
+            pinned_index = self._get_index_of_item(pinned_list, url)
+            self.append_item(qt_class, url, item_type, pinned_index)
+
+    def _update_pinned_list(self):
+        pinned_item_list = []
+        for item in self.data_list:
+            if item.pinned_index >= 0:
+                pinned_item_list.append(item)
+
+        sort_lambda = lambda i : i.url
+        pinned_item_list.sort(key=sort_lambda)
+        pinned_url_list = []
+        for item in pinned_item_list:
+            pinned_url_list.append(item.url)
+        self._settings.setValue("pinned_url", pinned_url_list)
+        self._settings.sync()
 
     def _is_valid_index(self, index):
         return index.isValid() and index.row() < len(self.data_list)
@@ -127,6 +149,14 @@ class DocumentationModel(QAbstractItemModel):
             index += 1
         else:
             return None
+
+    def _get_index_of_item(self, array, item):
+        index = 0
+        for x in array:
+            if x == item:
+                return index
+            index += 1
+        return -1
 
     def _find_last_pinned_index(self):
         max_pinned_index = 0

@@ -4,7 +4,7 @@ class TableItem:
     name = ""
     url = ""
     description = ""
-    pinned_index = 0
+    pinned_index = -1
     use_count = 0
     last_used = None
 

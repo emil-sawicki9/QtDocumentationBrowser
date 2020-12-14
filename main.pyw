@@ -1,4 +1,6 @@
 import sys
+
+from PyQt5.QtCore import QCoreApplication
 from tendo import singleton
 
 from PyQt5 import QtCore
@@ -21,8 +23,9 @@ def qt_message_handler(mode, context, message):
 
 
 if __name__ == '__main__':
-    # TODO Uncomment
-    # me = singleton.SingleInstance()
+    me = singleton.SingleInstance()
     QtCore.qInstallMessageHandler(qt_message_handler)
+    QCoreApplication.setOrganizationName("LidoSoft");
+    QCoreApplication.setApplicationName("QtDocumentationViewer");
     app = Application(sys.argv)
     sys.exit(app.exec_())

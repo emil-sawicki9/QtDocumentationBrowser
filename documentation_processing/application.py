@@ -1,8 +1,9 @@
 import requests
-from PyQt5.QtCore import QUrl, pyqtSlot
+from PyQt5.QtCore import QUrl, pyqtSlot, QTimer
 from PyQt5.QtGui import QGuiApplication, QDesktopServices
 from PyQt5.QtQml import QQmlApplicationEngine
 
+import qml_qrc
 from documentation_model.documentation_model import DocumentationModel
 from documentation_model.documentation_proxy_model import DocumentationFilterModel
 
@@ -32,7 +33,9 @@ class Application(QGuiApplication):
         self.most_used_model.show_only_most_used = True
 
         # Populating model
-        self._populate_qt_models()
+        # TODO Use thread to populate documentation model
+        populate_lambda = lambda: self._populate_qt_models()
+        QTimer.singleShot(1000, populate_lambda)
         # Initializing QML
         self.init_ui()
 
@@ -43,7 +46,7 @@ class Application(QGuiApplication):
         self.qml_engine.rootContext().setContextProperty("latestModel", self.latest_model)
         self.qml_engine.rootContext().setContextProperty("mostUsedModel", self.most_used_model)
         self.qml_engine.rootContext().setContextProperty("app", self)
-        self.qml_engine.load(QUrl("qml/main.qml"))
+        self.qml_engine.load(QUrl("qrc:/qml/main.qml"))
         # Debug: only for faster testing of parsing specific docs.
         # self.open_new_tab("https://doc.qt.io/qt-5/q3dbars.html")
 

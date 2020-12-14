@@ -1,6 +1,8 @@
 import QtQuick 2.0
 
 Rectangle {
+    id: root
+
     color: "transparent"
     border {
         width: 1
@@ -9,6 +11,8 @@ Rectangle {
 
     property alias text: title.text
     property alias model: view.model
+
+    signal openMenu(string url, var delegate,real mouseX,real mouseY)
 
     Text {
         id: title
@@ -39,6 +43,7 @@ Rectangle {
         }
 
         delegate: Rectangle {
+            id: delegate
             property bool showHighlight: false
             color: delegateMA.containsMouse || showHighlight ? "#474747" : "#0C0C0C"
             width: view.width
@@ -55,7 +60,11 @@ Rectangle {
                 hoverEnabled: true
                 acceptedButtons: Qt.LeftButton | Qt.RightButton
                 onClicked: {
-                    app.open_in_external_browser(url)
+                    if ( mouse.button === Qt.LeftButton ) {
+                        app.open_in_external_browser(url)
+                    } else {
+                        root.openMenu(url, delegate, mouseX, mouseY)
+                    }
                 }
             }
         }
