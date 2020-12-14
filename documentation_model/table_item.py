@@ -4,6 +4,9 @@ class TableItem:
     name = ""
     url = ""
     description = ""
+    pinned_index = 0
+    use_count = 0
+    last_used = None
 
     def __init__(self):
         pass

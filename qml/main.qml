@@ -1,155 +1,111 @@
 import QtQuick.Window 2.2
 import QtQuick 2.9
+import QtQuick.Controls 2.9
+import QtQuick.Layouts 1.15
 
-import "table_view"
+import "components"
+import "pages"
 
-Window {
+ApplicationWindow {
+    id: root
     visible: true
     width: 600
     height: 400
     title: "Documentation viewer"
+    flags: Qt.FramelessWindowHint | Qt.Window
     readonly property int delegateHeight: 30
 
     Rectangle {
-        id: filterField
+        anchors.fill: parent
+        color: "#0C0C0C"
+    }
+
+    Rectangle {
+        id: topPanel
         anchors {
-            top: parent.top
             left: parent.left
-            leftMargin: 10
-            rightMargin: 10
             right: parent.right
+            top: parent.top
         }
-        height: delegateHeight
-        border {
-            width: 1
-            color: "black"
-        }
-        TextInput {
-            id: filterInput
-            anchors {
-                fill: parent
-                margins: 4
-            }
-            verticalAlignment: TextInput.AlignVCenter
-            focus: true
-            onTextChanged: documentationModel.filter(text)
-            Text {
-                anchors {
-                    right: parent.right
-                    rightMargin: 10
-                    verticalCenter: parent.verticalCenter
-                }
-                visible: filterInput.text !== ""
-                color: "black"
-                text: "X"
-            }
-        }
+        height: 20
+        color: "#0C0C0C"
+
         MouseArea {
+            property point previousPosition
+            anchors.fill: parent
+            onPressed: previousPosition = Qt.point(mouse.x, mouse.y)
+            onPositionChanged: {
+                root.setX(root.x + mouse.x - previousPosition.x)
+                root.setY(root.y + mouse.y - previousPosition.y)
+            }
+        }
+
+        Row {
             anchors {
                 right: parent.right
+                rightMargin: 5
                 top: parent.top
                 bottom: parent.bottom
             }
-            width: 30
-            enabled: filterInput.text !== ""
-            onClicked: filterInput.text = ""
+
+            layoutDirection: Qt.RightToLeft
+
+            TopPanelButton {
+                text: "-"
+                onClicked: root.showMinimized()
+            }
+
+            TopPanelButton {
+                text: "v"
+                checkable: true
+                onCheckedChanged: {
+                    if (checked) {
+                        root.flags |= Qt.WindowStaysOnTopHint
+                    } else {
+                        root.flags &= ~Qt.WindowStaysOnTopHint
+                    }
+                }
+            }
         }
     }
 
-    DocumentationDelegate {
-        id: listHeader
+    TabBar {
+        id: tabBar
         anchors {
-            top: filterField.bottom
+            top: topPanel.bottom
             left: parent.left
             right: parent.right
         }
-        height: delegateHeight
-        textList: ["Name", "Type"]
-        Rectangle {
-            anchors.bottom: parent.bottom
-            width: parent.width
-            height: 1
-            color: "black"
+        height: 40
+        currentIndex: 0
+
+        TabButton {
+            text: "Frontpage"
+        }
+        TabButton {
+            text: "Search"
         }
     }
 
-    ListView {
-        id: documentationTable
+    StackLayout {
+        id: stackView
         anchors {
-            top: listHeader.bottom
             left: parent.left
             right: parent.right
+            top: tabBar.bottom
             bottom: parent.bottom
         }
-        clip: true
-        boundsBehavior: Flickable.StopAtBounds
-        model: documentationModel
-        delegate: Rectangle {
-            color: delegateMA.containsMouse ? "#30007CBA" : "white"
-            width: documentationTable.width
-            height: delegateHeight
-            DocumentationDelegate {
-                anchors.fill: parent
-                textList: [name, description]
-            }
-            MouseArea {
-                id: delegateMA
-                anchors.fill: parent
-                hoverEnabled: true
-                onClicked: Qt.openUrlExternally(url)
-            }
+
+        currentIndex: tabBar.currentIndex
+
+        FrontPage {
+            Layout.fillWidth: true
+            Layout.fillHeight: true
         }
-        Rectangle {
-            anchors {
-                top: parent.top
-                right: parent.right
-                bottom: parent.bottom
-            }
-            visible: documentationTable.visibleArea.heightRatio !== 1
-            enabled: visible
-            color: scrollbarMA.containsMouse ? "#20808080" : "transparent"
-            width: scrollbarMA.containsMouse ? 15 : 5
-            Behavior on width {
-                NumberAnimation { duration: 100 }
-            }
-            Rectangle {
-                id: scrollbarRect
-                anchors {
-                    right: parent.right
-                }
-                y: documentationTable.visibleArea.yPosition * documentationTable.height
-                width: parent.width
-                height: Math.max(10, documentationTable.visibleArea.heightRatio * documentationTable.height)
-                color: "#AA808080"
-            }
-            MouseArea {
-                id: scrollbarMA
-                anchors.fill: parent
-                hoverEnabled: true
-                preventStealing: true
-                property bool draggingScrollbar: false
-                function updatePosition() {
-                    var yPos = Math.max(0, mouseY)
-                    if ( yPos >= scrollbarMA.height) {
-                        documentationTable.contentY = documentationTable.contentHeight - documentationTable.height
-                    } else {
-                        documentationTable.contentY = yPos / scrollbarMA.height * documentationTable.contentHeight
-                    }
-                }
-                onPressed: {
-                    if ( mouseY >= scrollbarRect.y && mouseY <= (scrollbarRect.height + scrollbarRect.y) ) {
-                        draggingScrollbar = true
-                    } else {
-                        updatePosition()
-                    }
-                }
-                onReleased: draggingScrollbar = false
-                onPositionChanged: {
-                    if ( draggingScrollbar ) {
-                        updatePosition()
-                    }
-                }
-            }
+
+        SearchPage {
+            Layout.fillWidth: true
+            Layout.fillHeight: true
         }
     }
 
