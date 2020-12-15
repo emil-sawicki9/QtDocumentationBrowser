@@ -69,6 +69,11 @@ class Application(QGuiApplication):
         self.documentation_model.pin_item(url, pin)
         self.pinned_model.sort(0)
 
+    @pyqtSlot(str, bool)
+    def move_pin_item(self, url, move_up):
+        self.documentation_model.move_pin_item(url, move_up)
+        self.pinned_model.sort(0)
+
     def _populate_qt_models(self):
         response_qt_classes = requests.get(QT_BASE_URL + "classes.html")
         response_qml_types = requests.get(QT_BASE_URL + "qmltypes.html")
@@ -79,3 +84,7 @@ class Application(QGuiApplication):
 
         self.documentation_model.populate_model(qt_classes_dictionary, QT_BASE_URL, "Qt class")
         self.documentation_model.populate_model(qml_types_dictionary, QT_BASE_URL, "QML type")
+
+        self.pinned_model.sort(0)
+        self.latest_model.sort(0)
+        self.most_used_model.sort(0)

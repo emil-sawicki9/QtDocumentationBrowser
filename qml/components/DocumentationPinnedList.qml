@@ -12,7 +12,7 @@ Rectangle {
     property alias text: title.text
     property alias model: view.model
 
-    signal openMenu(string url, var delegate,real mouseX,real mouseY)
+    signal openMenu(string url, int index, var delegate,real mouseX,real mouseY)
 
     Text {
         id: title
@@ -63,7 +63,7 @@ Rectangle {
                     if ( mouse.button === Qt.LeftButton ) {
                         app.open_in_external_browser(url)
                     } else {
-                        root.openMenu(url, delegate, mouseX, mouseY)
+                        root.openMenu(url, index, delegate, mouseX, mouseY)
                     }
                 }
             }

@@ -28,7 +28,7 @@ class DocumentationFilterModel(QSortFilterProxyModel):
         if self.show_only_pinned:
             left_count = self.sourceModel().data(left, DocumentationModel.PinnedIndexRole)
             right_count = self.sourceModel().data(right, DocumentationModel.PinnedIndexRole)
-            return left_count > right_count
+            return left_count < right_count
         return True
 
     def filterAcceptsRow(self, source_row, source_parent):

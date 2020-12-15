@@ -28,6 +28,7 @@ Item {
             model: pinnedModel
             onOpenMenu: {
                 pinnedMenu.url = url
+                pinnedMenu.index = index
                 pinnedMenu.popup(delegate, mouseX, mouseY)
             }
         }
@@ -43,10 +44,21 @@ Item {
     Menu {
         id: pinnedMenu
         property var url: ""
+        property int index: -1
         property bool isPinned: false
         modal: true
         dim: false
         closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+        Action {
+            text: "Move up"
+            enabled: pinnedMenu.index > 0
+            onTriggered: app.move_pin_item(pinnedMenu.url, true)
+        }
+        Action {
+            text: "Move down"
+            enabled: pinnedMenu.index < pinnedModel.rowCount() - 1
+            onTriggered: app.move_pin_item(pinnedMenu.url, false)
+        }
         Action {
             text: "Upin item"
             onTriggered: app.pin_item(pinnedMenu.url, false)

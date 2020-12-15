@@ -15,8 +15,8 @@ class DocumentationModel(QAbstractItemModel):
     UrlRole = Qt.UserRole + 3
     UseCountRole = Qt.UserRole + 4
     IsPinnedRole = Qt.UserRole + 5
-    PinnedIndexRole = Qt.UserRole + 5
-    LastUsedRole = Qt.UserRole + 6
+    PinnedIndexRole = Qt.UserRole + 6
+    LastUsedRole = Qt.UserRole + 7
     # Data
     column_list = [NameRole, DescriptionRole]
     data_list = []
@@ -28,13 +28,13 @@ class DocumentationModel(QAbstractItemModel):
     def __init__(self, parent=None):
         super(DocumentationModel, self).__init__(parent)
 
-    def rowCount(self, parent = QModelIndex()):
+    def rowCount(self, parent=QModelIndex()):
         return len(self.data_list)
 
     def columnCount(self, parent):
         return 2
 
-    def index(self, row, column, parent = QModelIndex()):
+    def index(self, row, column, parent=QModelIndex()):
         return self.createIndex(row, column, parent)
 
     def parent(self, child):
@@ -136,13 +136,46 @@ class DocumentationModel(QAbstractItemModel):
             if item.pinned_index >= 0:
                 pinned_item_list.append(item)
 
-        sort_lambda = lambda i : i.url
+        sort_lambda = lambda i: i.pinned_index
         pinned_item_list.sort(key=sort_lambda)
         pinned_url_list = []
         for item in pinned_item_list:
             pinned_url_list.append(item.url)
         self._settings.setValue("pinned_url", pinned_url_list)
         self._settings.sync()
+
+    def move_pin_item(self, url, move_up):
+        # Pin item to frontpage
+        found_item = self._find_item_with_url(url)
+        if found_item is None:
+            return
+
+        item = found_item['item']
+        item_on_same_place = None
+        item_on_same_place_index = 0
+        if move_up:
+            new_pinned_index = item.pinned_index - 1
+        else:
+            new_pinned_index = item.pinned_index + 1
+        for item2 in self.data_list:
+            if item2.pinned_index == new_pinned_index:
+                item_on_same_place = item2
+                break
+            item_on_same_place_index += 1
+
+        if item_on_same_place is None:
+            return
+
+        item_on_same_place.pinned_index = item.pinned_index
+        item.pinned_index = new_pinned_index
+
+        self._update_pinned_list()
+
+        index = found_item['index']
+        model_index = self.createIndex(index, 0)
+        model_index2 = self.createIndex(item_on_same_place_index, 0)
+        self.dataChanged.emit(model_index, model_index, [self.IsPinnedRole, self.PinnedIndexRole])
+        self.dataChanged.emit(model_index2, model_index2, [self.IsPinnedRole, self.PinnedIndexRole])
 
     def _is_valid_index(self, index):
         return index.isValid() and index.row() < len(self.data_list)
