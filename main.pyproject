@@ -1,0 +1,3 @@
+{
+    "files": ["qml/main.qml","qml/components/DocumentationPinnedList.qml", "qml/components/DocumentationDelegate.qml","qml/components/ScrollBar.qml","qml/pages/SearchPage.qml", "qml/pages/FrontPage.qml"]
+}
