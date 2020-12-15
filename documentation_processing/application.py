@@ -1,5 +1,7 @@
+import threading
+
 import requests
-from PyQt5.QtCore import QUrl, pyqtSlot, QTimer
+from PyQt5.QtCore import QUrl, pyqtSlot
 from PyQt5.QtGui import QGuiApplication, QDesktopServices
 from PyQt5.QtQml import QQmlApplicationEngine
 
@@ -32,12 +34,12 @@ class Application(QGuiApplication):
         self.most_used_model.setSourceModel(self.documentation_model)
         self.most_used_model.show_only_most_used = True
 
-        # Populating model
-        # TODO Use thread to populate documentation model
-        populate_lambda = lambda: self._populate_qt_models()
-        QTimer.singleShot(1000, populate_lambda)
         # Initializing QML
         self.init_ui()
+
+        # Populating model
+        t = threading.Thread(target=self._populate_qt_models())
+        t.start()
 
     def init_ui(self):
         self.qml_engine = QQmlApplicationEngine()

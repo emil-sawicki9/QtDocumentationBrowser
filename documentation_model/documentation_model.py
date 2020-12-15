@@ -1,3 +1,4 @@
+import threading
 import time
 
 from PyQt5 import QtCore
@@ -22,6 +23,7 @@ class DocumentationModel(QAbstractItemModel):
 
     # Private
     _settings = QSettings("LidoSoft", "QtDocumentationViewer")
+    _lock = threading.Lock()
 
     def __init__(self, parent=None):
         super(DocumentationModel, self).__init__(parent)
@@ -118,11 +120,15 @@ class DocumentationModel(QAbstractItemModel):
         self.endInsertRows()
 
     def populate_model(self, data, base_url, item_type):
-        pinned_list = self._settings.value("pinned_url", [], str)
-        for qt_class in data:
-            url = base_url + data[qt_class]
-            pinned_index = self._get_index_of_item(pinned_list, url)
-            self.append_item(qt_class, url, item_type, pinned_index)
+        self._lock.acquire()
+        try:
+            pinned_list = self._settings.value("pinned_url", [], str)
+            for qt_class in data:
+                url = base_url + data[qt_class]
+                pinned_index = self._get_index_of_item(pinned_list, url)
+                self.append_item(qt_class, url, item_type, pinned_index)
+        finally:
+            self._lock.release()
 
     def _update_pinned_list(self):
         pinned_item_list = []
